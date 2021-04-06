@@ -31,6 +31,9 @@
 		// wp_die( '<xmp>: '. print_r( $options->get( 'all' ), true ) .'</xmp>' );
 		$tags_blog_postmeta = $options->get( 'tags_blog_postmeta' );
 		$blogs_to_import    = $options->get( 'blogs_to_import', array() );
+		///// seed custom
+		$blogs_to_exclude_import = $options->get( 'blogs_to_exclude_import', array() );
+		///// seed custom  end
 		$all_blogs          = $options->get( 'populate_all_blogs' );
 		?>
 		<p class="description"><?php _e( "You can create your post archive in a specific 'aggregate' blog of your choosing, or you can use the main blog of your site. Each has it's own pros and cons.","wpmu-sitewide-tags"); ?></p>
@@ -49,6 +52,14 @@
 					<p class="description"><?php _e('The maximum number of posts stored in the tags blog.','wds-multisite-aggregate') ?></p>
 				</td>
 			</tr>
+			<?php /// seed custom ?>
+			<tr valign="top">
+				<th scope="row"><?php _e('Save as drafts','wds-multisite-aggregate') ?></th>
+				<td>
+					<label><input name="tags_save_as_drafts" type="checkbox" id="tags_save_as_drafts" value="1" <?php checked( $options->get( 'tags_save_as_drafts' ) ); ?> /> <strong><?php _e("Enabled","wpmu-sitewide-tags"); ?></strong></label>
+				</td>
+			</tr>
+			<?php /// seed custom end ?>
 			<tr valign="top">
 				<th scope="row"><?php _e('Include Pages','wds-multisite-aggregate') ?></th>
 				<td>
@@ -96,6 +107,10 @@
 					<p class="description"><?php _e( 'To import from multiple blogs, separate blog ids with commas.', 'wds-multisite-aggregate' ); ?></p>
 					<p><label><strong>OR</strong>&nbsp;&nbsp;<input name="populate_all_blogs" type="checkbox" id="populate_all_blogs" value="1" <?php checked( $all_blogs ); ?> />&nbsp;<?php _e( 'All blogs', 'wds-multisite-aggregate' ); ?></label></p>
 					<p class="description"><?php _e( 'Add posts from all blogs to the sitewide tags blog.', 'wds-multisite-aggregate' ) ?></p>
+					<?php ///////// seed custom ?>
+					<p><label><?php _e( 'except these Blog ID(s):', 'wds-multisite-aggregate' ); ?> <input name="blogs_to_exclude_import" type="text" id="blogs_to_exclude_import" style="width: 15%" value="<?php echo empty( $blogs_to_exclude_import ) ? '' : @implode( ',', $blogs_to_exclude_import ); ?>" <?php echo $all_blogs ? '' : 'readonly="readonly"'; ?>/></label></p>
+					<p class="description"><?php _e( 'Separate blog ids with commas.', 'wds-multisite-aggregate' ); ?></p>
+					<?php ///////// seed custom end ?>
 				</td>
 			</tr>
 		</table>

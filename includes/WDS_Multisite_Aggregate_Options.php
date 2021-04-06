@@ -117,6 +117,7 @@ class WDS_Multisite_Aggregate_Options {
 			'tags_blog_thumbs',
 			'tags_blog_pages',
 			'populate_all_blogs',
+			'tags_save_as_drafts',
 		);
 		foreach ( $options_as_integers_maybe_set as $option_key ) {
 			$set = $this->make_integer_from_request( $option_key );
@@ -140,6 +141,11 @@ class WDS_Multisite_Aggregate_Options {
 
 		$blogs_to_import = $this->comma_delimited_to_array_from_request( 'blogs_to_import' );
 		$this->update( 'blogs_to_import', $blogs_to_import );
+
+		///// seed custom
+		$blogs_to_exclude_import = $this->comma_delimited_to_array_from_request( 'blogs_to_exclude_import' );
+		$this->update( 'blogs_to_exclude_import', $blogs_to_exclude_import );
+		////// seed custom  end
 
 		// force write if changes saved
 		$this->update( true );

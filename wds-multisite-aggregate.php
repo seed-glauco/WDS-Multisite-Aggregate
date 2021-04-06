@@ -3,8 +3,8 @@
 Plugin Name: WDS Multisite Aggregate
 Plugin URI: https://github.com/WebDevStudios/WDS-Multisite-Aggregate
 Description: Creates a blog where all the most recent posts on a WordPress network may be found. Based on WordPress MU Sitewide Tags Pages plugin by Donncha O Caoimh. WP-CLI: `wp multisite_aggregate --help`.
-Version: 1.0.2
-Author: WebDevStudios
+Version: 1.0.3
+Author: WebDevStudios - Seed 
 Author URI: http://webdevstudios.com
 */
 /*  Copyright 2008 Donncha O Caoimh (http://ocaoimh.ie/)
@@ -60,6 +60,8 @@ class WDS_Multisite_Aggregate {
 		// Options setter/getter and handles updating options on save
 		$this->options = new WDS_Multisite_Aggregate_Options();
 		$this->options->hooks();
+		// seed custom
+	//	$this->set_custom_taxonomy();
 		// Handles Admin display
 		$this->admin = new WDS_Multisite_Aggregate_Admin( $this->options );
 		$this->admin->hooks();
@@ -93,9 +95,16 @@ class WDS_Multisite_Aggregate {
 		if ( ! empty( $_GET['page'] ) && 'wds-multisite-aggregate' == $_GET['page'] ) {
 			add_action( 'admin_init', array( $this, 'context_hooks' ) );
 		}
+		
 
 	}
+	/* seed custom
+	public function set_custom_taxonomy(){
+		switch_to_blog( $this->options->get( 'tags_blog_id' ));
+		add_action( 'init', 'sitename_provenience', 0 );
+		restore_current_blog();
 
+	} */
 	public function context_hooks() {
 		if ( isset( $_GET['total_imported'] ) ) {
 			add_action( 'all_admin_notices', array( $this, 'user_notice' ) );
@@ -309,7 +318,13 @@ class WDS_Multisite_Aggregate {
 
 		$this->meta_to_sync['permalink'] = get_permalink( $post_id );
 		$this->meta_to_sync['blogid'] = $post_blog_id; // org_blog_id
-		
+
+		/////// seed custom
+		$blog_info = get_blog_details( array( 'blog_id' => $post_blog_id ) );
+		$blogname = $blog_info->blogname;
+		$this->meta_to_sync['sitename'] = $blogname;
+		//////// seed custom end
+
 		// Post thumbnail
 		if ( $this->options->get( 'tags_blog_thumbs' ) && ( $thumb_id = get_post_thumbnail_id( $post->ID ) ) ) {
 			
@@ -359,6 +374,10 @@ class WDS_Multisite_Aggregate {
 		$tags_blog_id = $this->options->get( 'tags_blog_id' );
 
 		switch_to_blog( $tags_blog_id );
+		
+	 
+
+ 
 
 		// Filter categories before handling
 		$post_categories = apply_filters( 'wds_multisite_aggregate_filter_categories', $post_categories );
@@ -422,13 +441,34 @@ class WDS_Multisite_Aggregate {
 			// Use the category IDs in the post
 			$post->post_category = $category_ids;
 			$this->doing_save_post = true;
+			/// seed custom
+			if ( $this->options->get( 'tags_save_as_drafts' )   && ('publish' != get_post_status ( $post->ID ))):
+				$post->post_status = 'draft';
+			endif;
+			//// seed custom end
+			
+			
+		 
 			$post_id = wp_insert_post( $post, true );
-
+			/* seed custom
+			if (taxonomy_exists('sitename_provenience')):			 
+				$term = term_exists( $blogname, 'sitename_provenience' );
+				if ($term):
+					$term_id = $term['term_id'];
+				else:
+					$new_term = wp_insert_term( $blogname, 'sitename_provenience' );					 
+					$term_id = $new_term['term_id'];					 
+				endif;
+				wp_set_object_terms( $post_id,  intval($term_id), 'sitename_provenience' );
+			 
+			endif;
+			*/
 			if ( ! is_wp_error( $post_id ) ) {
 				// do meta sync action
 				do_action( 'wds_multisite_aggregate_post_sync', $post_id, $post, $this->meta_to_sync );
 				$this->imported[] = $post;
 			}
+			
 		}
 
 		restore_current_blog();
@@ -720,7 +760,18 @@ class WDS_Multisite_Aggregate {
 	protected function get_blogs_to_import() {
 		if ( $this->options->get( 'populate_all_blogs' ) ) {
 			global $wpdb;
-			return $wpdb->get_col( "SELECT blog_id FROM $wpdb->blogs ORDER BY blog_id DESC" );
+
+			/// seed custom 
+			if ($this->options->get( 'blogs_to_exclude_import', array() )):
+				$blogs_excluded = $this->options->get( 'blogs_to_exclude_import', array() );
+				$sql = "SELECT  blog_id FROM {$wpdb->blogs} WHERE `blog_id` NOT IN(".implode(', ', array_fill(0, count($blogs_excluded), '%d')).")";
+				// Call $wpdb->prepare passing the values of the array as separate arguments
+				$query = call_user_func_array(array($wpdb, 'prepare'), array_merge(array($sql), $blogs_excluded));
+				return $wpdb->get_col( $query );
+		 	// seed custom end
+			else:
+				return $wpdb->get_col( "SELECT blog_id FROM $wpdb->blogs ORDER BY blog_id DESC" );
+			endif;
 		}
 		// 'all blogs' not checked? check the blogs_to_import option
 		return $this->options->get( 'blogs_to_import', array() );
@@ -848,3 +899,67 @@ $WDS_Multisite_Aggregate->hooks();
 if ( defined( 'WP_CLI' ) && WP_CLI ) {
 	include_once( dirname( __FILE__ ) .'/includes/WDS_Multisite_Aggregate_CLI.php' );
 }
+
+/* seed custom
+
+function sitename_provenience() {
+
+	$labels = array(
+		'name'                       => _x( 'Proveniences', 'Taxonomy General Name', 'text_domain' ),
+		'singular_name'              => _x( 'Provenience', 'Taxonomy Singular Name', 'text_domain' ),
+		'menu_name'                  => __( 'Provenience', 'text_domain' ),
+		'all_items'                  => __( 'All Items', 'text_domain' ),
+		'parent_item'                => __( 'Parent Item', 'text_domain' ),
+		'parent_item_colon'          => __( 'Parent Item:', 'text_domain' ),
+		'new_item_name'              => __( 'New Item Name', 'text_domain' ),
+		'add_new_item'               => __( 'Add New Item', 'text_domain' ),
+		'edit_item'                  => __( 'Edit Item', 'text_domain' ),
+		'update_item'                => __( 'Update Item', 'text_domain' ),
+		'view_item'                  => __( 'View Item', 'text_domain' ),
+		'separate_items_with_commas' => __( 'Separate items with commas', 'text_domain' ),
+		'add_or_remove_items'        => __( 'Add or remove items', 'text_domain' ),
+		'choose_from_most_used'      => __( 'Choose from the most used', 'text_domain' ),
+		'popular_items'              => __( 'Popular Items', 'text_domain' ),
+		'search_items'               => __( 'Search Items', 'text_domain' ),
+		'not_found'                  => __( 'Not Found', 'text_domain' ),
+		'no_terms'                   => __( 'No items', 'text_domain' ),
+		'items_list'                 => __( 'Items list', 'text_domain' ),
+		'items_list_navigation'      => __( 'Items list navigation', 'text_domain' ),
+	);
+	$args = array(
+		'labels'                     => $labels,
+		'hierarchical'               => false,
+		'rewrite' => array( 'slug' => 'sitename_provenience' ),
+		'public'                     => true,
+		'show_ui'                    => true,
+		'show_admin_column'          => true,
+		'show_in_nav_menus'          => true,
+		'show_tagcloud'              => true,
+		'show_in_rest'               => true,
+	);
+	register_taxonomy( 'sitename_provenience', array( 'post' ), $args );
+
+}
+*/
+
+/// seed custom
+function show_sitename_in_json( $data, $post, $context ) {
+  $sitename = get_post_meta( $post->ID, 'sitename', true ); // get the value from the meta field
+
+	if( $sitename ): // include it in the response if not empty
+		$data->data['sitename'] = $sitename ;
+	endif;
+
+ 
+	$featured_image_id = $data->data['featured_media']; // get featured image id
+	$featured_image_url = wp_get_attachment_image_src( $featured_image_id, 'medium' ); // get url of the original size
+
+	if( $featured_image_url ) {
+		$data->data['featured_image_url'] = $featured_image_url[0];
+	} 
+	
+	return $data;
+}
+add_filter( 'rest_prepare_post', 'show_sitename_in_json', 10, 3 );
+/// seed custom end
+ 
