@@ -60,8 +60,7 @@ class WDS_Multisite_Aggregate {
 		// Options setter/getter and handles updating options on save
 		$this->options = new WDS_Multisite_Aggregate_Options();
 		$this->options->hooks();
-		// seed custom
-	//	$this->set_custom_taxonomy();
+	 
 		// Handles Admin display
 		$this->admin = new WDS_Multisite_Aggregate_Admin( $this->options );
 		$this->admin->hooks();
@@ -98,13 +97,7 @@ class WDS_Multisite_Aggregate {
 		
 
 	}
-	/* seed custom
-	public function set_custom_taxonomy(){
-		switch_to_blog( $this->options->get( 'tags_blog_id' ));
-		add_action( 'init', 'sitename_provenience', 0 );
-		restore_current_blog();
-
-	} */
+ 
 	public function context_hooks() {
 		if ( isset( $_GET['total_imported'] ) ) {
 			add_action( 'all_admin_notices', array( $this, 'user_notice' ) );
@@ -125,6 +118,23 @@ class WDS_Multisite_Aggregate {
 		}
 	}
 
+	public function set_provenience_term($blogname,$post_id){
+			echo $blogname.get_current_blog_id()."...".$post_id;
+			
+			if (taxonomy_exists('sitename_provenience')):	
+			die();		 
+				$term = term_exists( $blogname, 'sitename_provenience' );
+				if ($term):
+					$term_id = $term['term_id'];
+				else:
+					$new_term = wp_insert_term( $blogname, 'sitename_provenience' );					 
+					$term_id = $new_term['term_id'];					 
+				endif;
+				wp_set_object_terms( $post_id,  intval($term_id), 'sitename_provenience' );
+			 
+			endif;
+	}
+
 	function populate_from_blogs() {
 		global $wpdb;
 
@@ -140,6 +150,10 @@ class WDS_Multisite_Aggregate {
 		if ( ! $tags_blog_id || empty( $blogs_to_import ) ) {
 			return false;
 		}
+
+
+
+
 
 		$blog_to_populate = array_shift( $blogs_to_import );
 
@@ -446,23 +460,14 @@ class WDS_Multisite_Aggregate {
 				$post->post_status = 'draft';
 			endif;
 			//// seed custom end
-			
-			
+		 
 		 
 			$post_id = wp_insert_post( $post, true );
-			/* seed custom
-			if (taxonomy_exists('sitename_provenience')):			 
-				$term = term_exists( $blogname, 'sitename_provenience' );
-				if ($term):
-					$term_id = $term['term_id'];
-				else:
-					$new_term = wp_insert_term( $blogname, 'sitename_provenience' );					 
-					$term_id = $new_term['term_id'];					 
-				endif;
-				wp_set_object_terms( $post_id,  intval($term_id), 'sitename_provenience' );
+			// seed custom
+			$this->set_provenience_term($blogname,$post_id);
+			 //seed custom end
+
 			 
-			endif;
-			*/
 			if ( ! is_wp_error( $post_id ) ) {
 				// do meta sync action
 				do_action( 'wds_multisite_aggregate_post_sync', $post_id, $post, $this->meta_to_sync );
@@ -900,49 +905,7 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
 	include_once( dirname( __FILE__ ) .'/includes/WDS_Multisite_Aggregate_CLI.php' );
 }
 
-/* seed custom
 
-function sitename_provenience() {
-
-	$labels = array(
-		'name'                       => _x( 'Proveniences', 'Taxonomy General Name', 'text_domain' ),
-		'singular_name'              => _x( 'Provenience', 'Taxonomy Singular Name', 'text_domain' ),
-		'menu_name'                  => __( 'Provenience', 'text_domain' ),
-		'all_items'                  => __( 'All Items', 'text_domain' ),
-		'parent_item'                => __( 'Parent Item', 'text_domain' ),
-		'parent_item_colon'          => __( 'Parent Item:', 'text_domain' ),
-		'new_item_name'              => __( 'New Item Name', 'text_domain' ),
-		'add_new_item'               => __( 'Add New Item', 'text_domain' ),
-		'edit_item'                  => __( 'Edit Item', 'text_domain' ),
-		'update_item'                => __( 'Update Item', 'text_domain' ),
-		'view_item'                  => __( 'View Item', 'text_domain' ),
-		'separate_items_with_commas' => __( 'Separate items with commas', 'text_domain' ),
-		'add_or_remove_items'        => __( 'Add or remove items', 'text_domain' ),
-		'choose_from_most_used'      => __( 'Choose from the most used', 'text_domain' ),
-		'popular_items'              => __( 'Popular Items', 'text_domain' ),
-		'search_items'               => __( 'Search Items', 'text_domain' ),
-		'not_found'                  => __( 'Not Found', 'text_domain' ),
-		'no_terms'                   => __( 'No items', 'text_domain' ),
-		'items_list'                 => __( 'Items list', 'text_domain' ),
-		'items_list_navigation'      => __( 'Items list navigation', 'text_domain' ),
-	);
-	$args = array(
-		'labels'                     => $labels,
-		'hierarchical'               => false,
-		'rewrite' => array( 'slug' => 'sitename_provenience' ),
-		'public'                     => true,
-		'show_ui'                    => true,
-		'show_admin_column'          => true,
-		'show_in_nav_menus'          => true,
-		'show_tagcloud'              => true,
-		'show_in_rest'               => true,
-	);
-	register_taxonomy( 'sitename_provenience', array( 'post' ), $args );
-
-}
-*/
-
-/// seed custom
 function show_sitename_in_json( $data, $post, $context ) {
   $sitename = get_post_meta( $post->ID, 'sitename', true ); // get the value from the meta field
 
@@ -962,4 +925,54 @@ function show_sitename_in_json( $data, $post, $context ) {
 }
 add_filter( 'rest_prepare_post', 'show_sitename_in_json', 10, 3 );
 /// seed custom end
+
+
+
+
+function tax_sitename_provenience() {
+
+	$sitewide_tags_blog = get_site_option( 'sitewide_tags_blog' );
+
+ 	if (isset($sitewide_tags_blog['tags_blog_id']) && $sitewide_tags_blog['tags_blog_id'] ==  get_current_blog_id()):
+		$labels = array(
+			'name'                       => _x( 'Proveniences', 'Taxonomy General Name', 'wds-multisite-aggregate' ),
+			'singular_name'              => _x( 'Provenience', 'Taxonomy Singular Name', 'wds-multisite-aggregate' ),
+			'menu_name'                  => __( 'Provenience', 'wds-multisite-aggregate' ),
+			'all_items'                  => __( 'All Proveniences', 'wds-multisite-aggregate' ),
+			'parent_item'                => __( 'Parent Item', 'wds-multisite-aggregate' ),
+			'parent_item_colon'          => __( 'Parent Item:', 'wds-multisite-aggregate' ),
+			'new_item_name'              => __( 'New Provenience', 'wds-multisite-aggregate' ),
+			'add_new_item'               => __( 'Add New Provenience', 'wds-multisite-aggregate' ),
+			'edit_item'                  => __( 'Edit Provenience', 'wds-multisite-aggregate' ),
+			'update_item'                => __( 'Update Provenience', 'wds-multisite-aggregate' ),
+			'view_item'                  => __( 'View Provenience', 'wds-multisite-aggregate' ),
+			'separate_items_with_commas' => __( 'Separate Provenience with commas', 'wds-multisite-aggregate' ),
+			'add_or_remove_items'        => __( 'Add or remove Proveniences', 'wds-multisite-aggregate' ),
+			'choose_from_most_used'      => __( 'Choose from the most used', 'wds-multisite-aggregate' ),
+			'popular_items'              => __( 'Popular Proveniences', 'wds-multisite-aggregate' ),
+			'search_items'               => __( 'Search Proveniences', 'wds-multisite-aggregate' ),
+			'not_found'                  => __( 'Not Found', 'wds-multisite-aggregate' ),
+			'no_terms'                   => __( 'No Proveniences', 'wds-multisite-aggregate' ),
+			'items_list'                 => __( 'Provenience list', 'wds-multisite-aggregate' ),
+			'items_list_navigation'      => __( 'Provenience list navigation', 'wds-multisite-aggregate' ),
+		);
+		$args = array(
+			'labels'                     => $labels,
+			'hierarchical'               => false,
+			'rewrite' => array( 'slug' => 'sitename_provenience' ),
+			'public'                     => true,
+			'show_ui'                    => true,
+			'show_admin_column'          => true,
+			'show_in_nav_menus'          => true,
+			'show_tagcloud'              => true,
+			'show_in_rest'               => true,
+		);
+		register_taxonomy( 'sitename_provenience', array( 'post' ), $args );
+	endif;
+
+	
+}
+
+add_action( 'init', 'tax_sitename_provenience', 0 );
+
  
