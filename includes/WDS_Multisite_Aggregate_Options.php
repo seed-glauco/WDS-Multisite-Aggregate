@@ -117,7 +117,7 @@ class WDS_Multisite_Aggregate_Options {
 			'tags_blog_thumbs',
 			'tags_blog_pages',
 			'populate_all_blogs',
-			'tags_save_as_drafts',
+			'tags_save_as_pendings',
 		);
 		foreach ( $options_as_integers_maybe_set as $option_key ) {
 			$set = $this->make_integer_from_request( $option_key );

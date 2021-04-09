@@ -119,20 +119,21 @@ class WDS_Multisite_Aggregate {
 	}
 
 	public function set_provenience_term($blogname,$post_id){
-			echo $blogname.get_current_blog_id()."...".$post_id;
-			
-			if (taxonomy_exists('sitename_provenience')):	
-			die();		 
-				$term = term_exists( $blogname, 'sitename_provenience' );
-				if ($term):
-					$term_id = $term['term_id'];
-				else:
-					$new_term = wp_insert_term( $blogname, 'sitename_provenience' );					 
-					$term_id = $new_term['term_id'];					 
-				endif;
-				wp_set_object_terms( $post_id,  intval($term_id), 'sitename_provenience' );
 			 
+			
+			if (!taxonomy_exists('sitename_provenience')):	
+				tax_sitename_provenience();
 			endif;
+
+			$term = term_exists( $blogname, 'sitename_provenience' );
+			if ($term):
+				$term_id = $term['term_id'];
+			else:
+				$new_term = wp_insert_term( $blogname, 'sitename_provenience' );					 
+				$term_id = $new_term['term_id'];					 
+			endif;
+			wp_set_object_terms( $post_id,  intval($term_id), 'sitename_provenience' );
+			 
 	}
 
 	function populate_from_blogs() {
@@ -456,14 +457,15 @@ class WDS_Multisite_Aggregate {
 			$post->post_category = $category_ids;
 			$this->doing_save_post = true;
 			/// seed custom
-			if ( $this->options->get( 'tags_save_as_drafts' )   && ('publish' != get_post_status ( $post->ID ))):
-				$post->post_status = 'draft';
+			if ( $this->options->get( 'tags_save_as_pendings' )   && ('publish' != get_post_status ( $post->ID ))):
+				$post->post_status = 'pending';
 			endif;
 			//// seed custom end
 		 
 		 
 			$post_id = wp_insert_post( $post, true );
 			// seed custom
+			
 			$this->set_provenience_term($blogname,$post_id);
 			 //seed custom end
 

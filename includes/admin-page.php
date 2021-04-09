@@ -54,9 +54,9 @@
 			</tr>
 			<?php /// seed custom ?>
 			<tr valign="top">
-				<th scope="row"><?php _e('Save as drafts','wds-multisite-aggregate') ?></th>
+				<th scope="row"><?php _e('Save as pendings','wds-multisite-aggregate') ?></th>
 				<td>
-					<label><input name="tags_save_as_drafts" type="checkbox" id="tags_save_as_drafts" value="1" <?php checked( $options->get( 'tags_save_as_drafts' ) ); ?> /> <strong><?php _e("Enabled","wpmu-sitewide-tags"); ?></strong></label>
+					<label><input name="tags_save_as_pendings" type="checkbox" id="tags_save_as_pendings" value="1" <?php checked( $options->get( 'tags_save_as_pendings' ) ); ?> /> <strong><?php _e("Enabled","wpmu-sitewide-tags"); ?></strong></label>
 				</td>
 			</tr>
 			<?php /// seed custom end ?>
