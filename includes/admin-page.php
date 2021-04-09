@@ -54,9 +54,9 @@
 			</tr>
 			<?php /// seed custom ?>
 			<tr valign="top">
-				<th scope="row"><?php _e('Save as pendings','wds-multisite-aggregate') ?></th>
+				<th scope="row"><?php _e('Save as drafts','wds-multisite-aggregate') ?></th>
 				<td>
-					<label><input name="tags_save_as_pendings" type="checkbox" id="tags_save_as_pendings" value="1" <?php checked( $options->get( 'tags_save_as_pendings' ) ); ?> /> <strong><?php _e("Enabled","wpmu-sitewide-tags"); ?></strong></label>
+					<label><input name="tags_save_as_drafts" type="checkbox" id="tags_save_as_drafts" value="1" <?php checked( $options->get( 'tags_save_as_drafts' ) ); ?> /> <strong><?php _e("Enabled","wpmu-sitewide-tags"); ?></strong></label>
 				</td>
 			</tr>
 			<?php /// seed custom end ?>
@@ -127,7 +127,7 @@
 			<tr valign="top">
 				<td>
 					<p><?php _e( 'This page will reload while copying the posts and may take a long time to finish.', 'wds-multisite-aggregate' ) ?></p>
-					<p><strong><em><?php _e( 'Note: Depending on your server resources, you may need to turn off other plugins while using the back-populate feature.', 'wds-multisite-aggregate' ) ?></em></strong></p>
+					<p><strong><em><?php _e( 'Note: Dedraft on your server resources, you may need to turn off other plugins while using the back-populate feature.', 'wds-multisite-aggregate' ) ?></em></strong></p>
 				</td>
 			</tr>
 		<div class='submit'><input class='button-primary' onclick="return confirm('<?php _e( 'Are you sure you want to back-populate? This could take a while.', 'wds-multisite-aggregate' ); ?>');"type='submit' value='<?php _e( 'Back Populate', 'wds-multisite-aggregate' ) ?>' /></div>

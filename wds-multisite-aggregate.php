@@ -457,8 +457,8 @@ class WDS_Multisite_Aggregate {
 			$post->post_category = $category_ids;
 			$this->doing_save_post = true;
 			/// seed custom
-			if ( $this->options->get( 'tags_save_as_pendings' )   && ('publish' != get_post_status ( $post->ID ))):
-				$post->post_status = 'pending';
+			if ( $this->options->get( 'tags_save_as_drafts' )   && ('publish' != get_post_status ( $post->ID ))):
+				$post->post_status = 'draft';
 			endif;
 			//// seed custom end
 		 
